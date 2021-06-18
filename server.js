@@ -25,6 +25,7 @@ mongoose.connect(process.env.DATABASE_CLOUD, { useNewUrlParser: true,
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const propertyRoutes = require("./controllers/Propertyroute");
+const profileRoutes = require("./controllers/profile")
 
 
 
@@ -38,6 +39,7 @@ app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api/property', propertyRoutes);
+app.use('/api/profile', profileRoutes);
 
 app.use('/api/get', (req, res) => {
     res.json("Server is working");

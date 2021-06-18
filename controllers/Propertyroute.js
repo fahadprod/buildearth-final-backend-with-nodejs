@@ -32,14 +32,13 @@ router.get("/getproperty", async (req,res)=>{
 })
 
 
-router.get("/allUsers", async (req, res) => {
-  const users = await User.find()
-  res.send(users)
-})
+
 
 router.get("/allProperty", async (req, res) => {
   try {
-    const allProperty = await Property.find()
+    const allProperty = await Property.find().sort({
+      createdAt: -1
+    });
     res.send(allProperty)
   } catch (err) {
     res.status(500).json(err)
@@ -58,32 +57,100 @@ router.get("/:id/properties", async (req, res) => {
 });
 
 
+// search by filters without min max price
 
+// router.get("/filter", async (req, res) => {
+
+//   const filters = req.query;
+//   const property = await Property.find()
+//     console.log(property);
+//     const filteredProperty = property.filter((property) => {
+//       console.log(property);
+//       let isValid = true;
+//       for (key in filters) {
+//         console.log(key, property[key], filters[key]);
+//         isValid = isValid && property[key] == filters[key];
+//       }
+//       return isValid;
+//     });
+//     res.send(filteredProperty);
+  
+  
+// })
+
+
+// second method for filter by using all value
+
+router.get("/filterProperty/:society/:name/:category/:minprice/:maxprice", async (req, res) => {
+  try {
+    const findProperty = await Property.find({
+      society: req.params.society,
+      name: req.params.name,
+      category: req.params.category,
+      price: { $gte: req.params.minprice, $lte: req.params.maxprice },
+    });
+    res.status(200).json(findProperty)
+  }catch(err){
+    res.status(500).json(err)
+  }
+})
+
+
+// search filter property with all value or with any one value you can filter properties
+
+// router.post("/findProperty", async (req, res) => {
+//   try {
+//     let { society, name, category, minprice, maxprice } = req.query
+//     let query = {}
+//     if (society != null) {
+//       query.society = society
+//     }
+//     if (name != null) {
+//       query.name = name
+//     }
+//     if (category != null) {
+//       query.category = category
+//     }
+//     if (minprice != null) {
+//       if (query.minprice > 0) {
+//         query.minprice <= price
+//       }
+//     }
+//     if(maxprice != null){
+//       if(query.maxprice > 0){
+//         query.maxprice >= price
+//       }
+//     }
+//     const result = await Property.find(query);
+//     res.status(200).json(result);
+//   } catch (err) {
+//     res.status(500).json(err)
+//   }
+// })
 
 //Filter Search Router
-router.get("/getproperty/:society/:name/:category/:minprice/:maxprice", requireAuth, async (req,res)=>{
-    const pageNumber = 1;
-    const PageSize = 5;
-    try{
-        const property= await Property.find({
-            society:req.params.society,
-            name:req.params.name,
-            category:req.params.category,
-            minprice: {$gte:req.params.minprice},
-            maxprice: {$lte:req.params.maxprice }
-        })
-        .skip((pageNumber - 1) * PageSize)
-        .limit(PageSize)
-        .sort()
+// router.get("/getproperty/:society/:name/:category/:minprice/:maxprice", async (req,res)=>{
+//     const pageNumber = 1;
+//     const PageSize = 5;
+//     try{
+//         const property= await Property.find({
+//             society:req.params.society,
+//             name:req.params.name,
+//             category:req.params.category,
+//             price: {$gte:req.params.minprice, $lte:req.params.maxprice},
+//         })
+//         .skip((pageNumber - 1) * PageSize)
+//         .limit(PageSize)
+//         .sort()
 
-        console.log(property)
-        res.send(property)
+//         console.log(property)
+//         res.send(property)
 
-    } catch(err){
-    console.log(err)
-    res.status(400).json('server error')
-    }
-})
+//     } catch(err){
+//     console.log(err)
+//     res.status(400).json('server error')
+//     }
+// })
 
 
 
@@ -237,6 +304,7 @@ router.put("/update/:id", upload.single("file"), async (req, res) => {
       if (err) {
         res.status(500).json({ error: true, Message: err });
       } else {
+        console.log(data)
         const imagePath = data.Location;
         const updateProperty = await Property.findByIdAndUpdate(
           { _id: req.params.id },
@@ -329,6 +397,7 @@ router.put("/update/:id", upload.single("file"), async (req, res) => {
         
         const {slug} = req.params;
         Property.findOneAndRemove({slug}).exec((err, data)=>{
+          console.log(data)
             if (err) {
                 console.log(err);
                 res.status(400).json({ error: 'Could not Delete Category' });
@@ -341,7 +410,7 @@ router.put("/update/:id", upload.single("file"), async (req, res) => {
                 if(err) console.log('S3 DELETE ERROR DURING', err);
                 else console.log('S3 DELETED DURING', data);
             });
-            res.json({
+            res.status(200).json({
                 message:'Category deleted Successfully'
             });
         });
